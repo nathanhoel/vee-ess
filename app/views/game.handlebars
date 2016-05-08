@@ -1,0 +1,16 @@
+<h1>Example App: Game</h1>
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script type="text/javascript">
+(function() {
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext("2d");
+    
+    function init()
+	{		
+		if(typeof game_loop != "undefined") clearInterval(game_loop);
+		game_loop = setInterval(paint, 60);
+	}
+	init();
+})();
+</script>

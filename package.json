@@ -20,6 +20,10 @@
     "url": "https://github.com/nathanhoel/vee-ess/issues"
   },
   "dependencies": {
-    "express": "~4.13.4"
+    "express": "~4.13.4",
+    "jade": "~1.11.0",
+    "express-handlebars": "ericf/express-handlebars",
+    "path": "~0.12.7",
+    "body-parser": "~1.15.1"
   }
 }

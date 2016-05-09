@@ -1,16 +1,18 @@
-<h1>Example App: Game</h1>
-<canvas id="canvas" width="800" height="600"></canvas>
-
+<h1>Vee/Ess</h1>
 <script type="text/javascript">
-(function() {
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext("2d");
-    
-    function init()
-	{		
-		if(typeof game_loop != "undefined") clearInterval(game_loop);
-		game_loop = setInterval(paint, 60);
-	}
-	init();
-})();
+var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+function preload() {
+    game.load.spritesheet('thor', '/assets/images/Thor.png', 32, 32);
+}
+
+var ship1;
+function create() {
+    ship1 = game.add.sprite(200, 200, 'thor', 1);
+    ship1.animations.add('default', [0,1,2,3], 8, true);
+    ship1.animations.play('default');
+}
+
+function update() {
+}
 </script>

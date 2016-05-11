@@ -8,37 +8,55 @@ function preload() {
 
 var ship1;
 function create() {
+    game.time.desiredFps = 30;
     game.physics.startSystem(Phaser.Physics.ARCADE);
     ship1 = game.add.sprite(200, 200, 'thor', 1);
     ship1.animations.add('default', [0,1,2,3], 8, true);
     ship1.animations.play('default');
     ship1.anchor.setTo(0.5);
     game.physics.arcade.enable(ship1);
+    ship1.body.drag.set(50);
+//    ship1.body.maxVelocity = 50;
+//    ship1.body.acceleration = 5;
 }
 
-function accelerate(sprite, speed) {
+function moveForward(sprite, speed) {
  game.physics.arcade.accelerationFromRotation(sprite.rotation - (Math.PI/2), speed, ship1.body.acceleration);
 }
 
-var maxAngularAcceleration = 20;
-var maxAngularVelocity = 50;
-function nextVelocity(currentAngularVelocity, currentAngle, desiredAngle) {
+var maxAngularAcceleration = 0.5;
+var maxAngularVelocity = 10;
+function setNextAngle(sprite, desiredAngle) {
+    currentAngle = sprite.angle;
+    currentAngularVelocity = sprite.angularVelocity || 0;
+    
     angleError = Math.abs(desiredAngle - currentAngle);
     var relativeVelocity = desiredAngle < currentAngle ? -1 : 1;
-    
-    // Base Case: angleError is within angular acceleration
-    if (angleError <= maxAngularAcceleration) {
-        return relativeVelocity * angleError;
+    if (angleError > 180) {
+        relativeVelocity = relativeVelocity * -1;
+        angleError = Math.abs(angleError - 360);
     }
     
+    // Base Case: angleError is within angular acceleration
+    if (angleError <= Math.max(maxAngularAcceleration, 2)) {
+        sprite.angularVelocity = relativeVelocity * angleError;
+        sprite.angle = desiredAngle;
+        console.log('setting angle to: '+ desiredAngle);
+        return;
+    }
+    
+    console.log('------------------------------');
+    console.log('current angle: ' + currentAngle);
+    console.log('desired angle: ' + desiredAngle);
     console.log('angle error: ' + angleError);
+    
     // Choose some new velocity within range of current
     // velocity such that 
     // (angleError - VInRange) >= stopping distance
     // stopping distance is equal to
     // (VInRange / 2) * (VInRange/maxAngularAcceleration - 1);
     // http://www.wolframalpha.com/input/?i=solve+for+x+:+%5B%2F%2Fmath:y-x+%3E%3D+(x+%2F+2)+*+(x%2Fz+-+1)%2F%2F%5D
-    bestVelocity = Math.floor(0.5 * Math.sqrt(8*angleError*maxAngularAcceleration + maxAngularAcceleration^2) - (maxAngularAcceleration/2));
+    bestVelocity = 0.5 * Math.sqrt(8*angleError*maxAngularAcceleration + maxAngularAcceleration^2) - (maxAngularAcceleration/2);
     console.log('best: ' + bestVelocity);
     
     tickMaxVelocity = Math.min(relativeVelocity * currentAngularVelocity + maxAngularAcceleration, maxAngularVelocity);
@@ -46,15 +64,22 @@ function nextVelocity(currentAngularVelocity, currentAngle, desiredAngle) {
     
     achieveableVelocity = relativeVelocity * Math.min(tickMaxVelocity, bestVelocity);
     console.log('achieveable: ' + achieveableVelocity);
-    return achieveableVelocity;
+    
+    sprite.angularVelocity = achieveableVelocity;
+    sprite.angle = currentAngle + achieveableVelocity;
 }
 
 var desiredAngle = 0;
 function update() {
     if (game.input.mousePointer.isDown) {
-        desiredAngle = game.math.radToDeg(game.physics.arcade.angleToPointer(ship1)) + 90; //sprite image is rotated 90 degrees... need better fix for this
+        desiredAngle = Math.floor(game.math.radToDeg(game.physics.arcade.angleToPointer(ship1)) + 90); //sprite image is rotated 90 degrees... need better fix for this
+        if (desiredAngle > 180) {
+            desiredAngle = desiredAngle - 360;
+        }
+        moveForward(ship1, 50);
+    } else {
+        ship1.body.acceleration.set(0);
     }
-    nextAngularVelocity = nextVelocity(ship1.body.angularVelocity, ship1.angle, desiredAngle);
-    ship1.body.angularVelocity = nextAngularVelocity;
+    setNextAngle(ship1, desiredAngle);
 }
 </script>

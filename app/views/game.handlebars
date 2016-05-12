@@ -11,13 +11,14 @@ function create() {
     game.time.desiredFps = 30;
     game.physics.startSystem(Phaser.Physics.ARCADE);
     ship1 = game.add.sprite(200, 200, 'thor', 1);
-    ship1.animations.add('default', [0,1,2,3], 8, true);
-    ship1.animations.play('default');
+    ship1.name = "Thor"
+    ship1.animations.add('moving', [0,1,2,3], 8, true);
+    ship1.animations.add('stopped', [0]);
+    ship1.animations.play('stopped');
     ship1.anchor.setTo(0.5);
     game.physics.arcade.enable(ship1);
     ship1.body.drag.set(50);
-//    ship1.body.maxVelocity = 50;
-//    ship1.body.acceleration = 5;
+    ship1.body.maxVelocity.set(500);
 }
 
 function moveForward(sprite, speed) {
@@ -70,16 +71,87 @@ function setNextAngle(sprite, desiredAngle) {
 }
 
 var desiredAngle = 0;
+var response = null;
 function update() {
     if (game.input.mousePointer.isDown) {
-        desiredAngle = Math.floor(game.math.radToDeg(game.physics.arcade.angleToPointer(ship1)) + 90); //sprite image is rotated 90 degrees... need better fix for this
+        closestPoint = closestVirtualPoint(ship1.position, game.input.mousePointer.position);
+        console.log(closestPoint);
+        desiredAngle =  Math.floor(Phaser.Math.radToDeg(Phaser.Math.angleBetweenPoints(ship1.position, closestPoint))) + 90; //sprite image is rotated 90 degrees... need better fix for this
         if (desiredAngle > 180) {
             desiredAngle = desiredAngle - 360;
         }
+        
+        response = null;
+        socket.emit('tick', { 
+            opponentPosition: [closestPoint.x, closestPoint.y],
+            angle: desiredAngle
+        }, function (res) {
+            console.log(res);
+            response = res;
+        });
+        
+        //while (response == null) {}
         moveForward(ship1, 50);
+        ship1.animations.play('moving');
     } else {
         ship1.body.acceleration.set(0);
+        ship1.animations.play('stopped');
     }
+    
     setNextAngle(ship1, desiredAngle);
+    game.world.wrap(ship1);
 }
+    
+function closestVirtualPoint(basePoint, relativePoint) {
+    // if x diff of x values is less than game.width then 
+    // both points are in the same x hemisphere
+    var xDiff = basePoint.x - relativePoint.x;
+    var sameXHemisphere = Math.abs(xDiff) > game.width;
+    // same for y hemisphere
+    var yDiff = basePoint.y - relativePoint.y;
+    var sameYHemisphere = yDiff > game.height;
+    
+    // if both are the same then they are in the same 
+    // quadrant and the closest path is the direct path
+    if (sameXHemisphere && sameYHemisphere) {
+        return relativePoint;
+    }
+    
+    var points = [];
+    
+    // if only one hemisphere is shared
+    var yDirection = Math.sign(yDiff);
+    var adjustedY = yDirection * game.height + relativePoint.y;
+    var xDirection = Math.sign(xDiff);
+    var adjustedX = xDirection * game.width + relativePoint.x;
+    if (!sameYHemisphere) {
+        points.push(new Phaser.Point(relativePoint.x, adjustedY));
+    }
+    
+    if (!sameXHemisphere) {
+        points.push(new Phaser.Point(adjustedX, relativePoint.y));
+    }
+    
+    if (!sameXHemisphere && !sameYHemisphere) {
+        points.push(new Phaser.Point(adjustedX, adjustedY));
+    }
+    
+    var closestPoint = relativePoint;
+    var closestDistance = Phaser.Math.distance(basePoint.x, basePoint.y, relativePoint.x, relativePoint.y);
+    points.forEach(function(point) {
+        distance = Phaser.Math.distance(basePoint.x, basePoint.y, point.x, point.y);
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestPoint = point;
+        }
+    });
+    
+    return closestPoint;
+}
+
+var socket = io.connect('http://localhost:3000');
+//socket.on('tickResponse', function (data) {
+//    response = data;
+//});
 </script>
+

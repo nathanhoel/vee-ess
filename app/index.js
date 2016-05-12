@@ -30,4 +30,7 @@ if (app.get('env') === 'development') {
   });
 }
 
-module.exports = require('http').createServer(app);
+server = require('http').createServer(app);
+require('./routes/socket')(server);
+
+module.exports = server;

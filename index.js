@@ -1,7 +1,7 @@
 /*jslint node: true */
 'use strict';
 
-var app = require('./app'),
+var app = require('./server'),
     port = process.env.PORT || 3000;
 
 var server = app

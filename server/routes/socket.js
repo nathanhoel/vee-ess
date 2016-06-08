@@ -3,9 +3,10 @@ module.exports = function (app) {
     
     io.on('connection', function (socket) {
       socket.on('tick', function (data, next) {
+        console.log('received');
         console.log(data);
         next({
-           angle: data.angle + 30 
+            angle: data.angle
         });
       });
     });

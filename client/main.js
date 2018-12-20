@@ -10,11 +10,13 @@ window.preload = function() {
 var ship1;
 var ship2;
 window.create = function() {
+    vsSprite = new vsSprite(game);
     game.time.advancedTiming = true
     game.enableStep();
     game.time.desiredFps = 30;
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    ship1 = vsSprite.setupSprite(game, 'Thor');
+    ship1 = vsSprite.setupSprite('Thor', 200, 200);
+    ship2 = vsSprite.setupSprite('Zeus', 600, 600);
 }
 
 var desiredAngle = 0;

@@ -5,27 +5,25 @@ var vsSprite = require('./vs-sprite.js');
 var vsMath = require('./vs-math.js');
 
 window.preload = function() {
-    console.log(Object.keys(vsMath));
-    console.log(Object.keys(vsSprite));
     game.load.spritesheet('thor', '/assets/images/Thor.png', 32, 32);
 }
 
 var ship1;
 var ship2;
 window.create = function() {
+    vsSprite = new vsSprite(game);
     game.time.advancedTiming = true
     game.enableStep();
     game.time.desiredFps = 30;
     game.physics.startSystem(Phaser.Physics.ARCADE);
-    ship1 = vsSprite.setupSprite(game, 'Thor');
+    ship1 = vsSprite.setupSprite('Thor', 200, 200);
+    ship2 = vsSprite.setupSprite('Zeus', 600, 600);
 }
 
 var desiredAngle = 0;
 var closestPoint = {x:0, y:0};
 var response = null;
 window.update = function() {
-    console.log(Object.keys(vsMath));
-    console.log(Object.keys(vsSprite));
     console.log('+++start tick+++');
     if (game.input.mousePointer.isDown) {
         console.log('Pointer Down');
@@ -162,14 +160,19 @@ module.exports.setNextAngle = function(sprite, desiredAngle) {
 },{}],4:[function(require,module,exports){
 var vsPhysics = require('./vs-sprite-physics.js');
 
-module.exports.setupSprite = function(game, name) {
-    ship = game.add.sprite(200, 200, 'thor', 1);
+function Sprite(game) {
+    this.game = game;
+}
+module.exports = Sprite;
+
+Sprite.prototype.setupSprite = function(name, x, y) {
+    ship = this.game.add.sprite(x, y, 'thor', 1);
     ship.name = name;
     ship.animations.add('moving', [0,1,2,3], 8, true);
     ship.animations.add('stopped', [0]);
     ship.animations.play('stopped');
     ship.anchor.setTo(0.5);
-    game.physics.arcade.enable(ship);
+    this.game.physics.arcade.enable(ship);
     ship.body.drag.set(50);
     ship.body.maxVelocity.set(500);
     
@@ -179,5 +182,6 @@ module.exports.setupSprite = function(game, name) {
     });
     
     return ship;
-}
+};
+
 },{"./vs-sprite-physics.js":3}]},{},[1]);
